@@ -1615,3 +1615,47 @@ select ('true'::jsonb)::bool;
 select ('true'::jsonb).bool;
 select ('{"text": "hello"}'::jsonb)::text;
 select ('{"text": "hello"}'::jsonb).text;
+
+-- JSONB entry-density statistics
+CREATE TEMP TABLE jsonb_entry_stats (j jsonb);
+INSERT INTO jsonb_entry_stats VALUES
+    ('{}'), ('{"a": 1}'), ('{"a": 1, "b": 2}'), ('[1, 2]');
+ALTER TABLE jsonb_entry_stats ALTER COLUMN j SET STATISTICS 2;
+ANALYZE jsonb_entry_stats;
+
+SELECT jsonb_entry_count_histogram
+FROM pg_stats
+WHERE schemaname = pg_my_temp_schema()::regnamespace::text
+  AND tablename = 'jsonb_entry_stats' AND attname = 'j';
+
+SELECT jsonb_path_entry_count_histogram
+FROM pg_stats
+WHERE schemaname = pg_my_temp_schema()::regnamespace::text
+  AND tablename = 'jsonb_entry_stats' AND attname = 'j';
+
+SELECT jsonb_distinct_entry_count_histogram
+FROM pg_stats
+WHERE schemaname = pg_my_temp_schema()::regnamespace::text
+  AND tablename = 'jsonb_entry_stats' AND attname = 'j';
+
+SELECT jsonb_empty_entry_fraction
+FROM pg_stats
+WHERE schemaname = pg_my_temp_schema()::regnamespace::text
+  AND tablename = 'jsonb_entry_stats' AND attname = 'j';
+
+CREATE TEMP TABLE jsonb_distinct_entry_stats (j jsonb);
+INSERT INTO jsonb_distinct_entry_stats VALUES
+    ('{"a": 1}'), ('{"a": 1, "b": 2}'), ('[1, 2]'),
+    ('{"a": 1, "b": 2, "c": 3}');
+ALTER TABLE jsonb_distinct_entry_stats ALTER COLUMN j SET STATISTICS 2;
+ANALYZE jsonb_distinct_entry_stats;
+
+SELECT jsonb_distinct_entry_count_histogram
+FROM pg_stats
+WHERE schemaname = pg_my_temp_schema()::regnamespace::text
+  AND tablename = 'jsonb_distinct_entry_stats' AND attname = 'j';
+
+SELECT stakind1, stakind2, stakind3, stakind4, stakind5
+FROM pg_statistic
+WHERE starelid = 'jsonb_entry_stats'::regclass AND staattnum = 1;
+\echo jsonb_entry_density_done

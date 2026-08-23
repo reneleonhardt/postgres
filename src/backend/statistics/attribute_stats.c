@@ -55,6 +55,12 @@ enum attribute_stats_argnum
 	RANGE_LENGTH_HISTOGRAM_ARG,
 	RANGE_EMPTY_FRAC_ARG,
 	RANGE_BOUNDS_HISTOGRAM_ARG,
+	JSONB_ENTRY_COUNT_HISTOGRAM_ARG,
+	JSONB_PATH_ENTRY_COUNT_HISTOGRAM_ARG,
+	ARRAY_ENTRY_COUNT_HISTOGRAM_ARG,
+	TSVECTOR_LEXEME_COUNT_HISTOGRAM_ARG,
+	JSONB_DISTINCT_ENTRY_COUNT_HISTOGRAM_ARG,
+	JSONB_EMPTY_ENTRY_FRACTION_ARG,
 	NUM_ATTRIBUTE_STATS_ARGS
 };
 
@@ -78,6 +84,12 @@ static struct StatsArgInfo attarginfo[] =
 	[RANGE_LENGTH_HISTOGRAM_ARG] = {"range_length_histogram", TEXTOID},
 	[RANGE_EMPTY_FRAC_ARG] = {"range_empty_frac", FLOAT4OID},
 	[RANGE_BOUNDS_HISTOGRAM_ARG] = {"range_bounds_histogram", TEXTOID},
+	[JSONB_ENTRY_COUNT_HISTOGRAM_ARG] = {"jsonb_entry_count_histogram", FLOAT4ARRAYOID},
+	[JSONB_PATH_ENTRY_COUNT_HISTOGRAM_ARG] = {"jsonb_path_entry_count_histogram", FLOAT4ARRAYOID},
+	[ARRAY_ENTRY_COUNT_HISTOGRAM_ARG] = {"array_entry_count_histogram", FLOAT4ARRAYOID},
+	[TSVECTOR_LEXEME_COUNT_HISTOGRAM_ARG] = {"tsvector_lexeme_count_histogram", FLOAT4ARRAYOID},
+	[JSONB_DISTINCT_ENTRY_COUNT_HISTOGRAM_ARG] = {"jsonb_distinct_entry_count_histogram", FLOAT4ARRAYOID},
+	[JSONB_EMPTY_ENTRY_FRACTION_ARG] = {"jsonb_empty_entry_fraction", FLOAT4ARRAYOID},
 	[NUM_ATTRIBUTE_STATS_ARGS] = {0}
 };
 
@@ -118,7 +130,7 @@ static bool delete_pg_statistic(Oid reloid, AttrNumber attnum, bool stainherit);
  * Insert or Update Attribute Statistics
  *
  * See pg_statistic.h for an explanation of how each statistic kind is
- * stored. Custom statistics kinds are not supported.
+ * stored.
  *
  * Depending on the statistics kind, we need to derive information from the
  * attribute for which we're storing the stats. For instance, the MCVs are
@@ -241,6 +253,12 @@ attribute_statistics_update_internal(Oid reloid,
 	bool		do_bounds_histogram = !PG_ARGISNULL(RANGE_BOUNDS_HISTOGRAM_ARG);
 	bool		do_range_length_histogram = !PG_ARGISNULL(RANGE_LENGTH_HISTOGRAM_ARG) &&
 		!PG_ARGISNULL(RANGE_EMPTY_FRAC_ARG);
+	bool		do_jsonb_entry_count_histogram = !PG_ARGISNULL(JSONB_ENTRY_COUNT_HISTOGRAM_ARG);
+	bool		do_jsonb_path_entry_count_histogram = !PG_ARGISNULL(JSONB_PATH_ENTRY_COUNT_HISTOGRAM_ARG);
+	bool		do_array_entry_count_histogram = !PG_ARGISNULL(ARRAY_ENTRY_COUNT_HISTOGRAM_ARG);
+	bool		do_tsvector_lexeme_count_histogram = !PG_ARGISNULL(TSVECTOR_LEXEME_COUNT_HISTOGRAM_ARG);
+	bool		do_jsonb_distinct_entry_count_histogram = !PG_ARGISNULL(JSONB_DISTINCT_ENTRY_COUNT_HISTOGRAM_ARG);
+	bool		do_jsonb_empty_entry_fraction = !PG_ARGISNULL(JSONB_EMPTY_ENTRY_FRACTION_ARG);
 
 	Datum		values[Natts_pg_statistic] = {0};
 	bool		nulls[Natts_pg_statistic] = {0};
@@ -267,6 +285,37 @@ attribute_statistics_update_internal(Oid reloid,
 	if (!stats_check_arg_array(fcinfo, attarginfo, ELEM_COUNT_HISTOGRAM_ARG))
 	{
 		do_dechist = false;
+		result = false;
+	}
+
+	if (!stats_check_arg_array(fcinfo, attarginfo, JSONB_ENTRY_COUNT_HISTOGRAM_ARG))
+	{
+		do_jsonb_entry_count_histogram = false;
+		result = false;
+	}
+	if (!stats_check_arg_array(fcinfo, attarginfo, JSONB_PATH_ENTRY_COUNT_HISTOGRAM_ARG))
+	{
+		do_jsonb_path_entry_count_histogram = false;
+		result = false;
+	}
+	if (!stats_check_arg_array(fcinfo, attarginfo, ARRAY_ENTRY_COUNT_HISTOGRAM_ARG))
+	{
+		do_array_entry_count_histogram = false;
+		result = false;
+	}
+	if (!stats_check_arg_array(fcinfo, attarginfo, TSVECTOR_LEXEME_COUNT_HISTOGRAM_ARG))
+	{
+		do_tsvector_lexeme_count_histogram = false;
+		result = false;
+	}
+	if (!stats_check_arg_array(fcinfo, attarginfo, JSONB_DISTINCT_ENTRY_COUNT_HISTOGRAM_ARG))
+	{
+		do_jsonb_distinct_entry_count_histogram = false;
+		result = false;
+	}
+	if (!stats_check_arg_array(fcinfo, attarginfo, JSONB_EMPTY_ENTRY_FRACTION_ARG))
+	{
+		do_jsonb_empty_entry_fraction = false;
 		result = false;
 	}
 
@@ -550,6 +599,37 @@ attribute_statistics_update_internal(Oid reloid,
 		else
 			result = false;
 	}
+
+	if (do_jsonb_entry_count_histogram)
+		statatt_set_slot(values, nulls, replaces,
+						 STATISTIC_KIND_JSONB_ENTRY_COUNT_HISTOGRAM,
+						 InvalidOid, InvalidOid,
+						 PG_GETARG_DATUM(JSONB_ENTRY_COUNT_HISTOGRAM_ARG), false, 0, true);
+	if (do_jsonb_path_entry_count_histogram)
+		statatt_set_slot(values, nulls, replaces,
+						 STATISTIC_KIND_JSONB_PATH_ENTRY_COUNT_HISTOGRAM,
+						 InvalidOid, InvalidOid,
+						 PG_GETARG_DATUM(JSONB_PATH_ENTRY_COUNT_HISTOGRAM_ARG), false, 0, true);
+	if (do_array_entry_count_histogram)
+		statatt_set_slot(values, nulls, replaces,
+						 STATISTIC_KIND_ARRAY_ENTRY_COUNT_HISTOGRAM,
+						 InvalidOid, InvalidOid,
+						 PG_GETARG_DATUM(ARRAY_ENTRY_COUNT_HISTOGRAM_ARG), false, 0, true);
+	if (do_tsvector_lexeme_count_histogram)
+		statatt_set_slot(values, nulls, replaces,
+						 STATISTIC_KIND_TSVECTOR_LEXEME_COUNT_HISTOGRAM,
+						 InvalidOid, InvalidOid,
+						 PG_GETARG_DATUM(TSVECTOR_LEXEME_COUNT_HISTOGRAM_ARG), false, 0, true);
+	if (do_jsonb_distinct_entry_count_histogram)
+		statatt_set_slot(values, nulls, replaces,
+						 STATISTIC_KIND_JSONB_DISTINCT_ENTRY_COUNT_HISTOGRAM,
+						 InvalidOid, InvalidOid,
+						 PG_GETARG_DATUM(JSONB_DISTINCT_ENTRY_COUNT_HISTOGRAM_ARG), false, 0, true);
+	if (do_jsonb_empty_entry_fraction)
+		statatt_set_slot(values, nulls, replaces,
+						 STATISTIC_KIND_JSONB_EMPTY_ENTRY_FRACTION,
+						 InvalidOid, InvalidOid,
+						 PG_GETARG_DATUM(JSONB_EMPTY_ENTRY_FRACTION_ARG), false, 0, true);
 
 	upsert_pg_statistic(starel, statup, values, nulls, replaces);
 

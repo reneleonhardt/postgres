@@ -53,6 +53,7 @@ OBJS = \
 	jsonb.o \
 	jsonb_gin.o \
 	jsonb_op.o \
+	jsonb_typanalyze.o \
 	jsonb_util.o \
 	jsonfuncs.o \
 	jsonbsubs.o \

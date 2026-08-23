@@ -2672,6 +2672,54 @@ pg_stats| SELECT n.nspname AS schemaname,
             ELSE NULL::real[]
         END AS elem_count_histogram,
         CASE
+            WHEN (s.stakind1 = 8) THEN s.stanumbers1
+            WHEN (s.stakind2 = 8) THEN s.stanumbers2
+            WHEN (s.stakind3 = 8) THEN s.stanumbers3
+            WHEN (s.stakind4 = 8) THEN s.stanumbers4
+            WHEN (s.stakind5 = 8) THEN s.stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_entry_count_histogram,
+        CASE
+            WHEN (s.stakind1 = 9) THEN s.stanumbers1
+            WHEN (s.stakind2 = 9) THEN s.stanumbers2
+            WHEN (s.stakind3 = 9) THEN s.stanumbers3
+            WHEN (s.stakind4 = 9) THEN s.stanumbers4
+            WHEN (s.stakind5 = 9) THEN s.stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_path_entry_count_histogram,
+        CASE
+            WHEN (s.stakind1 = 10) THEN s.stanumbers1
+            WHEN (s.stakind2 = 10) THEN s.stanumbers2
+            WHEN (s.stakind3 = 10) THEN s.stanumbers3
+            WHEN (s.stakind4 = 10) THEN s.stanumbers4
+            WHEN (s.stakind5 = 10) THEN s.stanumbers5
+            ELSE NULL::real[]
+        END AS array_entry_count_histogram,
+        CASE
+            WHEN (s.stakind1 = 11) THEN s.stanumbers1
+            WHEN (s.stakind2 = 11) THEN s.stanumbers2
+            WHEN (s.stakind3 = 11) THEN s.stanumbers3
+            WHEN (s.stakind4 = 11) THEN s.stanumbers4
+            WHEN (s.stakind5 = 11) THEN s.stanumbers5
+            ELSE NULL::real[]
+        END AS tsvector_lexeme_count_histogram,
+        CASE
+            WHEN (s.stakind1 = 12) THEN s.stanumbers1
+            WHEN (s.stakind2 = 12) THEN s.stanumbers2
+            WHEN (s.stakind3 = 12) THEN s.stanumbers3
+            WHEN (s.stakind4 = 12) THEN s.stanumbers4
+            WHEN (s.stakind5 = 12) THEN s.stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_distinct_entry_count_histogram,
+        CASE
+            WHEN (s.stakind1 = 13) THEN s.stanumbers1
+            WHEN (s.stakind2 = 13) THEN s.stanumbers2
+            WHEN (s.stakind3 = 13) THEN s.stanumbers3
+            WHEN (s.stakind4 = 13) THEN s.stanumbers4
+            WHEN (s.stakind5 = 13) THEN s.stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_empty_entry_fraction,
+        CASE
             WHEN (s.stakind1 = 6) THEN s.stavalues1
             WHEN (s.stakind2 = 6) THEN s.stavalues2
             WHEN (s.stakind3 = 6) THEN s.stavalues3
@@ -2798,6 +2846,54 @@ pg_stats_ext_exprs| SELECT cn.nspname AS schemaname,
             WHEN ((stat.a).stakind5 = 5) THEN (stat.a).stanumbers5
             ELSE NULL::real[]
         END AS elem_count_histogram,
+        CASE
+            WHEN ((stat.a).stakind1 = 8) THEN (stat.a).stanumbers1
+            WHEN ((stat.a).stakind2 = 8) THEN (stat.a).stanumbers2
+            WHEN ((stat.a).stakind3 = 8) THEN (stat.a).stanumbers3
+            WHEN ((stat.a).stakind4 = 8) THEN (stat.a).stanumbers4
+            WHEN ((stat.a).stakind5 = 8) THEN (stat.a).stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_entry_count_histogram,
+        CASE
+            WHEN ((stat.a).stakind1 = 9) THEN (stat.a).stanumbers1
+            WHEN ((stat.a).stakind2 = 9) THEN (stat.a).stanumbers2
+            WHEN ((stat.a).stakind3 = 9) THEN (stat.a).stanumbers3
+            WHEN ((stat.a).stakind4 = 9) THEN (stat.a).stanumbers4
+            WHEN ((stat.a).stakind5 = 9) THEN (stat.a).stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_path_entry_count_histogram,
+        CASE
+            WHEN ((stat.a).stakind1 = 10) THEN (stat.a).stanumbers1
+            WHEN ((stat.a).stakind2 = 10) THEN (stat.a).stanumbers2
+            WHEN ((stat.a).stakind3 = 10) THEN (stat.a).stanumbers3
+            WHEN ((stat.a).stakind4 = 10) THEN (stat.a).stanumbers4
+            WHEN ((stat.a).stakind5 = 10) THEN (stat.a).stanumbers5
+            ELSE NULL::real[]
+        END AS array_entry_count_histogram,
+        CASE
+            WHEN ((stat.a).stakind1 = 11) THEN (stat.a).stanumbers1
+            WHEN ((stat.a).stakind2 = 11) THEN (stat.a).stanumbers2
+            WHEN ((stat.a).stakind3 = 11) THEN (stat.a).stanumbers3
+            WHEN ((stat.a).stakind4 = 11) THEN (stat.a).stanumbers4
+            WHEN ((stat.a).stakind5 = 11) THEN (stat.a).stanumbers5
+            ELSE NULL::real[]
+        END AS tsvector_lexeme_count_histogram,
+        CASE
+            WHEN ((stat.a).stakind1 = 12) THEN (stat.a).stanumbers1
+            WHEN ((stat.a).stakind2 = 12) THEN (stat.a).stanumbers2
+            WHEN ((stat.a).stakind3 = 12) THEN (stat.a).stanumbers3
+            WHEN ((stat.a).stakind4 = 12) THEN (stat.a).stanumbers4
+            WHEN ((stat.a).stakind5 = 12) THEN (stat.a).stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_distinct_entry_count_histogram,
+        CASE
+            WHEN ((stat.a).stakind1 = 13) THEN (stat.a).stanumbers1
+            WHEN ((stat.a).stakind2 = 13) THEN (stat.a).stanumbers2
+            WHEN ((stat.a).stakind3 = 13) THEN (stat.a).stanumbers3
+            WHEN ((stat.a).stakind4 = 13) THEN (stat.a).stanumbers4
+            WHEN ((stat.a).stakind5 = 13) THEN (stat.a).stanumbers5
+            ELSE NULL::real[]
+        END AS jsonb_empty_entry_fraction,
         CASE
             WHEN ((stat.a).stakind1 = 6) THEN (stat.a).stavalues1
             WHEN ((stat.a).stakind2 = 6) THEN (stat.a).stavalues2

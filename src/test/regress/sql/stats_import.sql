@@ -1147,7 +1147,13 @@ CROSS JOIN LATERAL
         'elem_count_histogram', s.elem_count_histogram,
         'range_bounds_histogram', s.range_bounds_histogram::text,
         'range_empty_frac', s.range_empty_frac,
-        'range_length_histogram', s.range_length_histogram::text) AS r
+        'range_length_histogram', s.range_length_histogram::text,
+        'jsonb_entry_count_histogram', s.jsonb_entry_count_histogram,
+        'jsonb_path_entry_count_histogram', s.jsonb_path_entry_count_histogram,
+        'array_entry_count_histogram', s.array_entry_count_histogram,
+        'tsvector_lexeme_count_histogram', s.tsvector_lexeme_count_histogram,
+        'jsonb_distinct_entry_count_histogram', s.jsonb_distinct_entry_count_histogram,
+        'jsonb_empty_entry_fraction', s.jsonb_empty_entry_fraction) AS r
 WHERE s.schemaname = 'stats_import'
 AND s.tablename IN ('test', 'is_odd')
 ORDER BY s.tablename, s.attname, s.inherited;

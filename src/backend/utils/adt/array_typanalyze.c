@@ -89,6 +89,9 @@ static int	element_compare(const void *key1, const void *key2);
 static int	trackitem_compare_frequencies_desc(const void *e1, const void *e2, void *arg);
 static int	trackitem_compare_element(const void *e1, const void *e2, void *arg);
 static int	countitem_compare_count(const void *e1, const void *e2, void *arg);
+static int	compare_ints(const void *a, const void *b, void *arg);
+static void store_entry_count_histogram(VacAttrStats *stats, int slot_idx,
+										int *counts, int analyzed_rows);
 
 
 /*
@@ -233,6 +236,7 @@ compute_array_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 	int			bucket_width;
 	int			array_no;
 	int64		element_no;
+	int		   *entry_counts;
 	TrackItem  *item;
 	int			slot_idx;
 	HTAB	   *count_tab;
@@ -298,6 +302,7 @@ compute_array_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 	/* Initialize counters. */
 	b_current = 1;
 	element_no = 0;
+	entry_counts = palloc_array(int, samplerows);
 
 	/* Loop over the arrays. */
 	for (array_no = 0; array_no < samplerows; array_no++)
@@ -327,7 +332,10 @@ compute_array_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 		if (toast_raw_datum_size(value) > ARRAY_WIDTH_THRESHOLD)
 			continue;
 		else
+		{
+			entry_counts[analyzed_rows] = 0;
 			analyzed_rows++;
+		}
 
 		/*
 		 * Now detoast the array if needed, and deconstruct into datums.
@@ -358,6 +366,7 @@ compute_array_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 				null_present = true;
 				continue;
 			}
+			entry_counts[analyzed_rows - 1]++;
 
 			/* Lookup current element in hashtable, adding it if new */
 			elem_value = elem_values[j];
@@ -436,8 +445,8 @@ compute_array_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 	slot_idx = 0;
 	while (slot_idx < STATISTIC_NUM_SLOTS && stats->stakind[slot_idx] != 0)
 		slot_idx++;
-	if (slot_idx > STATISTIC_NUM_SLOTS - 2)
-		elog(ERROR, "insufficient pg_statistic slots for array stats");
+	if (slot_idx >= STATISTIC_NUM_SLOTS)
+		return;
 
 	/* We can only compute real stats if we found some non-null values. */
 	if (analyzed_rows > 0)
@@ -588,9 +597,9 @@ compute_array_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 			slot_idx++;
 		}
 
-		/* Generate DECHIST slot entry */
+		/* Generate DECHIST slot entry when a slot remains. */
 		count_items_count = hash_get_num_entries(count_tab);
-		if (count_items_count > 0)
+		if (count_items_count > 0 && slot_idx < STATISTIC_NUM_SLOTS)
 		{
 			int			num_hist = stats->attstattarget;
 			DECountItem **sorted_count_items;
@@ -683,10 +692,57 @@ compute_array_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 		}
 	}
 
+	/* The raw-entry histogram is optional when standard stats use all slots. */
+	if (analyzed_rows > 1 && slot_idx < STATISTIC_NUM_SLOTS)
+	{
+		store_entry_count_histogram(stats, slot_idx, entry_counts, analyzed_rows);
+		slot_idx++;
+	}
+
 	/*
 	 * We don't need to bother cleaning up any of our temporary palloc's. The
 	 * hashtable should also go away, as it used a child memory context.
 	 */
+}
+
+static int
+compare_ints(const void *a, const void *b, void *arg)
+{
+	int			ia = *((const int *) a);
+	int			ib = *((const int *) b);
+
+	return (ia > ib) - (ia < ib);
+}
+
+static void
+store_entry_count_histogram(VacAttrStats *stats, int slot_idx, int *counts,
+							int analyzed_rows)
+{
+	int			num_hist = Min(analyzed_rows, Max(stats->attstattarget, 2));
+	int64		total = 0;
+	float4	   *hist;
+	MemoryContext old_context;
+
+	for (int i = 0; i < analyzed_rows; i++)
+		total += counts[i];
+
+	qsort_interruptible(counts, analyzed_rows, sizeof(int), compare_ints, NULL);
+	old_context = MemoryContextSwitchTo(stats->anl_context);
+	hist = palloc_array(float4, num_hist + 1);
+	for (int i = 0; i < num_hist; i++)
+	{
+		int64		pos = ((int64) i * (analyzed_rows - 1)) / (num_hist - 1);
+
+		hist[i] = counts[pos];
+	}
+	hist[num_hist] = (float8) total / analyzed_rows;
+	MemoryContextSwitchTo(old_context);
+
+	stats->stakind[slot_idx] = STATISTIC_KIND_ARRAY_ENTRY_COUNT_HISTOGRAM;
+	stats->staop[slot_idx] = InvalidOid;
+	stats->stacoll[slot_idx] = InvalidOid;
+	stats->stanumbers[slot_idx] = hist;
+	stats->numnumbers[slot_idx] = num_hist + 1;
 }
 
 /*

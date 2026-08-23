@@ -49,6 +49,9 @@ static int	trackitem_compare_frequencies_desc(const void *e1, const void *e2,
 											   void *arg);
 static int	trackitem_compare_lexemes(const void *e1, const void *e2,
 									  void *arg);
+static int	compare_ints(const void *a, const void *b, void *arg);
+static void store_lexeme_count_histogram(VacAttrStats *stats, int *counts,
+										 int analyzed_rows);
 
 
 /*
@@ -145,6 +148,7 @@ compute_tsvector_stats(VacAttrStats *stats,
 {
 	int			num_mcelem;
 	int			null_cnt = 0;
+	int			analyzed_rows = 0;
 	double		total_width = 0;
 
 	/* This is D from the LC algorithm. */
@@ -159,6 +163,7 @@ compute_tsvector_stats(VacAttrStats *stats,
 	int			bucket_width;
 	int			vector_no,
 				lexeme_no;
+	int		   *entry_counts;
 	LexemeHashKey hash_key;
 
 	/*
@@ -193,6 +198,7 @@ compute_tsvector_stats(VacAttrStats *stats,
 	/* Initialize counters. */
 	b_current = 1;
 	lexeme_no = 0;
+	entry_counts = palloc_array(int, samplerows);
 
 	/* Loop over the tsvectors. */
 	for (vector_no = 0; vector_no < samplerows; vector_no++)
@@ -229,6 +235,7 @@ compute_tsvector_stats(VacAttrStats *stats,
 		 * Now detoast the tsvector if needed.
 		 */
 		vector = DatumGetTSVector(value);
+		entry_counts[analyzed_rows++] = vector->size;
 
 		/*
 		 * We loop through the lexemes in the tsvector and add them to our
@@ -446,6 +453,8 @@ compute_tsvector_stats(VacAttrStats *stats,
 			stats->statypbyval[0] = false;
 			stats->statypalign[0] = TYPALIGN_INT;
 		}
+
+		store_lexeme_count_histogram(stats, entry_counts, analyzed_rows);
 	}
 	else
 	{
@@ -460,6 +469,45 @@ compute_tsvector_stats(VacAttrStats *stats,
 	 * We don't need to bother cleaning up any of our temporary palloc's. The
 	 * hashtable should also go away, as it used a child memory context.
 	 */
+}
+
+static int
+compare_ints(const void *a, const void *b, void *arg)
+{
+	int			ia = *((const int *) a);
+	int			ib = *((const int *) b);
+
+	return (ia > ib) - (ia < ib);
+}
+
+static void
+store_lexeme_count_histogram(VacAttrStats *stats, int *counts, int analyzed_rows)
+{
+	int			num_hist = Min(analyzed_rows, Max(stats->attstattarget, 2));
+	int64		total = 0;
+	float4	   *hist;
+	MemoryContext old_context;
+
+	for (int i = 0; i < analyzed_rows; i++)
+		total += counts[i];
+
+	qsort_interruptible(counts, analyzed_rows, sizeof(int), compare_ints, NULL);
+	old_context = MemoryContextSwitchTo(stats->anl_context);
+	hist = palloc_array(float4, num_hist + 1);
+	for (int i = 0; i < num_hist; i++)
+	{
+		int64		pos = ((int64) i * (analyzed_rows - 1)) / (num_hist - 1);
+
+		hist[i] = counts[pos];
+	}
+	hist[num_hist] = (float8) total / analyzed_rows;
+	MemoryContextSwitchTo(old_context);
+
+	stats->stakind[1] = STATISTIC_KIND_TSVECTOR_LEXEME_COUNT_HISTOGRAM;
+	stats->staop[1] = InvalidOid;
+	stats->stacoll[1] = InvalidOid;
+	stats->stanumbers[1] = hist;
+	stats->numnumbers[1] = num_hist + 1;
 }
 
 /*

@@ -4575,6 +4575,72 @@ SELECT * FROM pg_locks pl LEFT JOIN pg_prepared_xacts ppx
 
      <row>
       <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_entry_count_histogram</structfield> <type>float4[]</type>
+       </para>
+       <para>
+        A histogram of the number of entries emitted by the
+        <literal>jsonb_ops</literal> GIN operator class for each non-null JSONB
+        value, followed by the average entry count. (Null for non-JSONB types.)
+       </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_path_entry_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of entries emitted by the
+       <literal>jsonb_path_ops</literal> GIN operator class for each non-null
+       JSONB value, followed by the average entry count. (Null for non-JSONB types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_distinct_entry_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of distinct entries emitted by the
+       <literal>jsonb_ops</literal> GIN operator class for each non-null JSONB
+       value, followed by the average distinct entry count.  (Null for
+       non-JSONB types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_empty_entry_fraction</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       The fraction of non-null JSONB values that emit no entries for the
+       <literal>jsonb_ops</literal> GIN operator class. (Null for non-JSONB types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>array_entry_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of non-null entries emitted by the
+       <literal>array_ops</literal> GIN operator class for each array value,
+       followed by the average entry count. (Null for non-array types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>tsvector_lexeme_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of lexemes emitted by the
+       <literal>tsvector_ops</literal> GIN operator class for each tsvector,
+       followed by the average lexeme count. (Null for non-tsvector types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
        <structfield>range_length_histogram</structfield> <type>anyarray</type>
       </para>
       <para>
@@ -5103,6 +5169,72 @@ SELECT * FROM pg_locks pl LEFT JOIN pg_prepared_xacts ppx
        A histogram of the counts of distinct non-null element values within the
        values of the expression, followed by the average number of distinct
        non-null elements.  (Null for scalar types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_entry_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of entries emitted by the
+       <literal>jsonb_ops</literal> GIN operator class for each non-null JSONB
+       value, followed by the average entry count. (Null for non-JSONB types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_path_entry_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of entries emitted by the
+       <literal>jsonb_path_ops</literal> GIN operator class for each non-null
+       JSONB value, followed by the average entry count. (Null for non-JSONB types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_distinct_entry_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of distinct entries emitted by the
+       <literal>jsonb_ops</literal> GIN operator class for each non-null JSONB
+       value, followed by the average distinct entry count.  (Null for
+       non-JSONB types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>jsonb_empty_entry_fraction</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       The fraction of non-null JSONB values that emit no entries for the
+       <literal>jsonb_ops</literal> GIN operator class. (Null for non-JSONB types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>array_entry_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of non-null entries emitted by the
+       <literal>array_ops</literal> GIN operator class for each array value,
+       followed by the average entry count. (Null for non-array types.)
+      </para></entry>
+     </row>
+
+     <row>
+      <entry role="catalog_table_entry"><para role="column_definition">
+       <structfield>tsvector_lexeme_count_histogram</structfield> <type>float4[]</type>
+      </para>
+      <para>
+       A histogram of the number of lexemes emitted by the
+       <literal>tsvector_ops</literal> GIN operator class for each tsvector,
+       followed by the average lexeme count. (Null for non-tsvector types.)
       </para></entry>
      </row>
 

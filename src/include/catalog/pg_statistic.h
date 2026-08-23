@@ -291,6 +291,34 @@ DECLARE_FOREIGN_KEY((starelid, staattnum), pg_attribute, (attrelid, attnum));
  */
 #define STATISTIC_KIND_BOUNDS_HISTOGRAM  7
 
+/*
+ * A "JSONB entry count histogram" slot describes the distribution of the
+ * number of entries emitted by the jsonb_ops GIN extraction function for each
+ * row.  The first M (>=2) members of stanumbers form a histogram of entry
+ * counts, and the last member is the average entry count.
+ */
+#define STATISTIC_KIND_JSONB_ENTRY_COUNT_HISTOGRAM  8
+
+/*
+ * A "JSONB path entry count histogram" slot describes the distribution of
+ * the number of entries emitted by the jsonb_path_ops GIN extraction function.
+ * The first M (>=2) members of stanumbers form a histogram of entry counts,
+ * and the last member is the average entry count.
+ */
+#define STATISTIC_KIND_JSONB_PATH_ENTRY_COUNT_HISTOGRAM  9
+
+/* Number of non-null entries emitted by array_ops for each row. */
+#define STATISTIC_KIND_ARRAY_ENTRY_COUNT_HISTOGRAM  10
+
+/* Number of lexemes emitted by tsvector_ops for each row. */
+#define STATISTIC_KIND_TSVECTOR_LEXEME_COUNT_HISTOGRAM  11
+
+/* Number of distinct entries emitted by jsonb_ops for each row. */
+#define STATISTIC_KIND_JSONB_DISTINCT_ENTRY_COUNT_HISTOGRAM  12
+
+/* Fraction of non-null JSONB values with no jsonb_ops entries. */
+#define STATISTIC_KIND_JSONB_EMPTY_ENTRY_FRACTION  13
+
 #endif							/* EXPOSE_TO_CLIENT_CODE */
 
 #endif							/* PG_STATISTIC_H */

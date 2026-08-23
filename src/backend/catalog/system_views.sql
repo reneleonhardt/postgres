@@ -248,6 +248,48 @@ CREATE VIEW pg_stats WITH (security_barrier) AS
             WHEN stakind5 = 5 THEN stanumbers5
         END AS elem_count_histogram,
         CASE
+            WHEN stakind1 = 8 THEN stanumbers1
+            WHEN stakind2 = 8 THEN stanumbers2
+            WHEN stakind3 = 8 THEN stanumbers3
+            WHEN stakind4 = 8 THEN stanumbers4
+            WHEN stakind5 = 8 THEN stanumbers5
+        END AS jsonb_entry_count_histogram,
+        CASE
+            WHEN stakind1 = 9 THEN stanumbers1
+            WHEN stakind2 = 9 THEN stanumbers2
+            WHEN stakind3 = 9 THEN stanumbers3
+            WHEN stakind4 = 9 THEN stanumbers4
+            WHEN stakind5 = 9 THEN stanumbers5
+        END AS jsonb_path_entry_count_histogram,
+        CASE
+            WHEN stakind1 = 10 THEN stanumbers1
+            WHEN stakind2 = 10 THEN stanumbers2
+            WHEN stakind3 = 10 THEN stanumbers3
+            WHEN stakind4 = 10 THEN stanumbers4
+            WHEN stakind5 = 10 THEN stanumbers5
+        END AS array_entry_count_histogram,
+        CASE
+            WHEN stakind1 = 11 THEN stanumbers1
+            WHEN stakind2 = 11 THEN stanumbers2
+            WHEN stakind3 = 11 THEN stanumbers3
+            WHEN stakind4 = 11 THEN stanumbers4
+            WHEN stakind5 = 11 THEN stanumbers5
+        END AS tsvector_lexeme_count_histogram,
+        CASE
+            WHEN stakind1 = 12 THEN stanumbers1
+            WHEN stakind2 = 12 THEN stanumbers2
+            WHEN stakind3 = 12 THEN stanumbers3
+            WHEN stakind4 = 12 THEN stanumbers4
+            WHEN stakind5 = 12 THEN stanumbers5
+        END AS jsonb_distinct_entry_count_histogram,
+        CASE
+            WHEN stakind1 = 13 THEN stanumbers1
+            WHEN stakind2 = 13 THEN stanumbers2
+            WHEN stakind3 = 13 THEN stanumbers3
+            WHEN stakind4 = 13 THEN stanumbers4
+            WHEN stakind5 = 13 THEN stanumbers5
+        END AS jsonb_empty_entry_fraction,
+        CASE
             WHEN stakind1 = 6 THEN stavalues1
             WHEN stakind2 = 6 THEN stavalues2
             WHEN stakind3 = 6 THEN stavalues3
@@ -375,6 +417,48 @@ CREATE VIEW pg_stats_ext_exprs WITH (security_barrier) AS
                WHEN (stat.a).stakind4 = 5 THEN (stat.a).stanumbers4
                WHEN (stat.a).stakind5 = 5 THEN (stat.a).stanumbers5
            END) AS elem_count_histogram,
+           (CASE
+               WHEN (stat.a).stakind1 = 8 THEN (stat.a).stanumbers1
+               WHEN (stat.a).stakind2 = 8 THEN (stat.a).stanumbers2
+               WHEN (stat.a).stakind3 = 8 THEN (stat.a).stanumbers3
+               WHEN (stat.a).stakind4 = 8 THEN (stat.a).stanumbers4
+               WHEN (stat.a).stakind5 = 8 THEN (stat.a).stanumbers5
+           END) AS jsonb_entry_count_histogram,
+            (CASE
+                WHEN (stat.a).stakind1 = 9 THEN (stat.a).stanumbers1
+                WHEN (stat.a).stakind2 = 9 THEN (stat.a).stanumbers2
+                WHEN (stat.a).stakind3 = 9 THEN (stat.a).stanumbers3
+                WHEN (stat.a).stakind4 = 9 THEN (stat.a).stanumbers4
+                WHEN (stat.a).stakind5 = 9 THEN (stat.a).stanumbers5
+            END) AS jsonb_path_entry_count_histogram,
+            (CASE
+                WHEN (stat.a).stakind1 = 10 THEN (stat.a).stanumbers1
+                WHEN (stat.a).stakind2 = 10 THEN (stat.a).stanumbers2
+                WHEN (stat.a).stakind3 = 10 THEN (stat.a).stanumbers3
+                WHEN (stat.a).stakind4 = 10 THEN (stat.a).stanumbers4
+                WHEN (stat.a).stakind5 = 10 THEN (stat.a).stanumbers5
+            END) AS array_entry_count_histogram,
+            (CASE
+                WHEN (stat.a).stakind1 = 11 THEN (stat.a).stanumbers1
+                WHEN (stat.a).stakind2 = 11 THEN (stat.a).stanumbers2
+                WHEN (stat.a).stakind3 = 11 THEN (stat.a).stanumbers3
+                WHEN (stat.a).stakind4 = 11 THEN (stat.a).stanumbers4
+                WHEN (stat.a).stakind5 = 11 THEN (stat.a).stanumbers5
+            END) AS tsvector_lexeme_count_histogram,
+            (CASE
+                WHEN (stat.a).stakind1 = 12 THEN (stat.a).stanumbers1
+                WHEN (stat.a).stakind2 = 12 THEN (stat.a).stanumbers2
+                WHEN (stat.a).stakind3 = 12 THEN (stat.a).stanumbers3
+                WHEN (stat.a).stakind4 = 12 THEN (stat.a).stanumbers4
+                WHEN (stat.a).stakind5 = 12 THEN (stat.a).stanumbers5
+            END) AS jsonb_distinct_entry_count_histogram,
+            (CASE
+                WHEN (stat.a).stakind1 = 13 THEN (stat.a).stanumbers1
+                WHEN (stat.a).stakind2 = 13 THEN (stat.a).stanumbers2
+                WHEN (stat.a).stakind3 = 13 THEN (stat.a).stanumbers3
+                WHEN (stat.a).stakind4 = 13 THEN (stat.a).stanumbers4
+                WHEN (stat.a).stakind5 = 13 THEN (stat.a).stanumbers5
+            END) AS jsonb_empty_entry_fraction,
            (CASE
                WHEN (stat.a).stakind1 = 6 THEN (stat.a).stavalues1
                WHEN (stat.a).stakind2 = 6 THEN (stat.a).stavalues2
