@@ -1658,4 +1658,12 @@ WHERE schemaname = pg_my_temp_schema()::regnamespace::text
 SELECT stakind1, stakind2, stakind3, stakind4, stakind5
 FROM pg_statistic
 WHERE starelid = 'jsonb_entry_stats'::regclass AND staattnum = 1;
+
+-- Keep the JSONB GIN planner path covered alongside its density statistics.
+CREATE INDEX jsonb_entry_stats_gin_idx ON jsonb_entry_stats USING gin (j);
+SET enable_seqscan = off;
+EXPLAIN (COSTS OFF)
+SELECT * FROM jsonb_entry_stats WHERE j @> '{"a": 1}';
+RESET enable_seqscan;
+DROP INDEX jsonb_entry_stats_gin_idx;
 \echo jsonb_entry_density_done

@@ -6000,7 +6000,6 @@ INSERT INTO jsonb_distinct_entry_stats VALUES
     ('{"a": 1, "b": 2, "c": 3}');
 ALTER TABLE jsonb_distinct_entry_stats ALTER COLUMN j SET STATISTICS 2;
 ANALYZE jsonb_distinct_entry_stats;
-
 SELECT jsonb_distinct_entry_count_histogram
 FROM pg_stats
 WHERE schemaname = pg_my_temp_schema()::regnamespace::text
@@ -6015,8 +6014,23 @@ FROM pg_statistic
 WHERE starelid = 'jsonb_entry_stats'::regclass AND staattnum = 1;
  stakind1 | stakind2 | stakind3 | stakind4 | stakind5 
 ----------+----------+----------+----------+----------
-          2 |        3 |        8 |        9 |       13
+        2 |        3 |        8 |        9 |       13
 (1 row)
 
+-- Keep the JSONB GIN planner path covered alongside its density statistics.
+CREATE INDEX jsonb_entry_stats_gin_idx ON jsonb_entry_stats USING gin (j);
+SET enable_seqscan = off;
+EXPLAIN (COSTS OFF)
+SELECT * FROM jsonb_entry_stats WHERE j @> '{"a": 1}';
+                      QUERY PLAN                      
+------------------------------------------------------
+ Bitmap Heap Scan on jsonb_entry_stats
+   Recheck Cond: (j @> '{"a": 1}'::jsonb)
+   ->  Bitmap Index Scan on jsonb_entry_stats_gin_idx
+         Index Cond: (j @> '{"a": 1}'::jsonb)
+(4 rows)
+
+RESET enable_seqscan;
+DROP INDEX jsonb_entry_stats_gin_idx;
 \echo jsonb_entry_density_done
 jsonb_entry_density_done

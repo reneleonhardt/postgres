@@ -104,7 +104,9 @@
 #include "access/tableam.h"
 #include "access/visibilitymap.h"
 #include "catalog/pg_collation.h"
+#include "catalog/pg_namespace.h"
 #include "catalog/pg_operator.h"
+#include "catalog/pg_opfamily.h"
 #include "catalog/pg_statistic.h"
 #include "catalog/pg_statistic_ext.h"
 #include "executor/nodeAgg.h"
@@ -272,6 +274,9 @@ static bool get_actual_variable_endpoint(Relation heapRel,
 static RelOptInfo *find_join_input_rel(PlannerInfo *root, Relids relids);
 static double btcost_correlation(IndexOptInfo *index,
 								 VariableStatData *vardata);
+static bool gin_estimate_jsonb_entries(PlannerInfo *root,
+									   IndexOptInfo *index, double num_tuples,
+									   double *num_entries);
 
 /* Define support routines for MCV hash tables */
 #define SH_PREFIX				MCVHashTable
@@ -7710,6 +7715,72 @@ btcost_correlation(IndexOptInfo *index, VariableStatData *vardata)
 	return indexCorrelation;
 }
 
+/*
+ * Use analyze-time JSONB entry counts when no usable GIN metapage statistics
+ * are available.  Match each estimate to its built-in extraction path.
+ */
+static bool
+gin_estimate_jsonb_entries(PlannerInfo *root, IndexOptInfo *index,
+						   double num_tuples, double *num_entries)
+{
+	VariableStatData vardata = {0};
+	AttStatsSlot sslot;
+	Oid			stat_kind;
+	Oid			jsonb_ops_family;
+	Oid			jsonb_path_ops_family;
+	double		entry_average;
+
+	if (index->nkeycolumns != 1 || index->opcintype[0] != JSONBOID)
+		return false;
+
+	jsonb_ops_family = GetSysCacheOid3(OPFAMILYAMNAMENSP,
+									   Anum_pg_opfamily_oid,
+									   ObjectIdGetDatum(index->relam),
+									   CStringGetDatum("jsonb_ops"),
+									   ObjectIdGetDatum(PG_CATALOG_NAMESPACE));
+	jsonb_path_ops_family = GetSysCacheOid3(OPFAMILYAMNAMENSP,
+											Anum_pg_opfamily_oid,
+											ObjectIdGetDatum(index->relam),
+											CStringGetDatum("jsonb_path_ops"),
+											ObjectIdGetDatum(PG_CATALOG_NAMESPACE));
+	if (!OidIsValid(jsonb_ops_family) || !OidIsValid(jsonb_path_ops_family))
+		return false;
+
+	if (index->opfamily[0] == jsonb_ops_family)
+		stat_kind = STATISTIC_KIND_JSONB_ENTRY_COUNT_HISTOGRAM;
+	else if (index->opfamily[0] == jsonb_path_ops_family)
+		stat_kind = STATISTIC_KIND_JSONB_PATH_ENTRY_COUNT_HISTOGRAM;
+	else
+		return false;
+
+	examine_indexcol_variable(root, index, 0, &vardata);
+	if (!HeapTupleIsValid(vardata.statsTuple) ||
+		!get_attstatsslot(&sslot, vardata.statsTuple, stat_kind, InvalidOid,
+						  ATTSTATSSLOT_NUMBERS))
+	{
+		ReleaseVariableStats(vardata);
+		return false;
+	}
+
+	if (sslot.nnumbers == 0 ||
+		!isfinite(sslot.numbers[sslot.nnumbers - 1]) ||
+		sslot.numbers[sslot.nnumbers - 1] < 0.0)
+	{
+		free_attstatsslot(&sslot);
+		ReleaseVariableStats(vardata);
+		return false;
+	}
+
+	entry_average = sslot.numbers[sslot.nnumbers - 1];
+	*num_entries = Max(ceil(num_tuples *
+							(1.0 - ((Form_pg_statistic) GETSTRUCT(vardata.statsTuple))->stanullfrac) *
+							entry_average), 1.0);
+
+	free_attstatsslot(&sslot);
+	ReleaseVariableStats(vardata);
+	return isfinite(*num_entries);
+}
+
 void
 btcostestimate(PlannerInfo *root, IndexPath *path, double loop_count,
 			   Cost *indexStartupCost, Cost *indexTotalCost,
@@ -8744,6 +8815,14 @@ gincostestimate(PlannerInfo *root, IndexPath *path, double loop_count,
 		numEntryPages = floor((numPages - numPendingPages) * 0.90);
 		numDataPages = numPages - numPendingPages - numEntryPages;
 		numEntries = floor(numEntryPages * 100);
+
+		{
+			double		jsonbEntries;
+
+			if (gin_estimate_jsonb_entries(root, index, numTuples,
+										   &jsonbEntries))
+				numEntries = jsonbEntries;
+		}
 	}
 
 	/* In an empty index, numEntries could be zero.  Avoid divide-by-zero */
