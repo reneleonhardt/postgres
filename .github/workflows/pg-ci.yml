@@ -657,6 +657,7 @@ jobs:
             -Duuid=e2fs \
             --buildtype=debug \
             -Dllvm=enabled \
+            -Dtest_max_connections=8 \
             build
 
       - name: Build
@@ -854,8 +855,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        num_slices: [2]
-        slice: [1, 2]
+        num_slices: [3]
+        slice: [1, 2, 3]
 
     env:
       # Avoid port conflicts between concurrent tap tests
@@ -890,6 +891,16 @@ jobs:
           }
 
       - *checkout_step
+
+      - name: Restore dependency download caches
+        id: windows_vs_dependency_cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~\AppData\Local\pip\Cache
+            ~\.cpan\sources
+            C:\msys64\var\cache\pacman\pkg
+          key: windows-vs-dependency-downloads-v1
 
       - name: Sysinfo
         run: |
@@ -977,6 +988,16 @@ jobs:
           perl -mIPC::Run -e 1
           if (!$?) { throw 'cmdfail' }
           echo ::endgroup::
+
+      - name: Save dependency download caches
+        if: steps.windows_vs_dependency_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~\AppData\Local\pip\Cache
+            ~\.cpan\sources
+            C:\msys64\var\cache\pacman\pkg
+          key: ${{ steps.windows_vs_dependency_cache.outputs.cache-primary-key }}
 
       - &window_setup_hosts_step
         name: Setup hosts file

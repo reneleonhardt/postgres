@@ -3954,6 +3954,7 @@ sys.exit(sp.returncode)
 
 running_suites = []
 install_suites = []
+test_max_connections = get_option('test_max_connections')
 
 testwrap = files('src/tools/testwrap')
 
@@ -4008,6 +4009,10 @@ foreach test_dir : tests
         '--max-concurrent-tests=20',
         '--dbname', dbname,
       ] + t.get('regress_args', [])
+
+      if kind == 'regress' and test_max_connections > 0
+        test_command_base += ['--max-connections=@0@'.format(test_max_connections)]
+      endif
 
       test_schedule = t.get('schedule', [])
 
