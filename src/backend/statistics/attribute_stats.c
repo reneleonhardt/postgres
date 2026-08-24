@@ -847,6 +847,8 @@ import_attribute_statistics(Relation rel, AttrNumber attnum, bool inherited,
 
 	InitFunctionCallInfoData(*newfcinfo, NULL, NUM_ATTRIBUTE_STATS_ARGS,
 							 InvalidOid, NULL, NULL);
+	for (int i = 0; i < NUM_ATTRIBUTE_STATS_ARGS; i++)
+		newfcinfo->args[i].isnull = true;
 
 	newfcinfo->args[ATTRELSCHEMA_ARG].value =
 		CStringGetTextDatum(get_namespace_name(RelationGetNamespace(rel)));
